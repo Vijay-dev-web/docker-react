@@ -37,18 +37,23 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1 # from your Travis config
+          aws-region: ap-south-1
 
-      - name: Generate deployment package
-        run: zip -r deploy.zip . -x '*.git*'
+      - name: Prepare deployment package
+        run: |
+          mkdir -p eb-deploy
+          cp Dockerfile eb-deploy/
+          cp -r public src package.json package-lock.json eb-deploy/
+          cd eb-deploy
+          zip -r ../deploy.zip .
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: "frontend" # from your Travis config (app:)
-          environment_name: "frontend-env" # from your Travis config (env:)
+          application_name: "frontend"
+          environment_name: "frontend-env"
           region: ap-south-1
           version_label: ${{ github.sha }}
           deployment_package: deploy.zip
